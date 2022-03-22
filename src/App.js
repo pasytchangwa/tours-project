@@ -1,11 +1,60 @@
-import React from "react";
-
+import React, { useState, useEffect } from 'react';
+import Loading from './components/Loading';
+import Tours from './components/Tours';
+// ATTENTION!!!!!!!!!!
+// I SWITCHED TO PERMANENT DOMAIN
 const url = 'https://course-api.com/react-tours-project';
-
 function App() {
+  const [tours, setTours] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const deleteTour = (id) => {
+    const newTours = tours.filter((tour) => tour.id !== id);
+    setTours(newTours);
+  };
+
+  const getTours = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(url);
+      const tours = await response.json();
+      setIsLoading(false);
+      setTours(tours);
+    } catch (error) {
+      setIsLoading(false);
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    getTours();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <main>
+        <Loading />
+      </main>
+    );
+  }
+
+  if (tours.length === 0) {
+    return (
+      <main>
+        <div className="title">
+          <h4>No existing tours</h4>
+          <button className="btn" onClick={getTours}>
+            Refresh
+          </button>
+        </div>
+      </main>
+    );
+  }
+
   return (
-    <div className="App">
-    </div>
+    <main>
+      <Tours tours={tours} deleteTour={deleteTour} />
+    </main>
   );
 }
 
