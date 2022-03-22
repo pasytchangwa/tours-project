@@ -1,43 +1,59 @@
 import React, { useState, useEffect } from 'react';
+import Loading from './components/Loading';
 import Tours from './components/Tours';
-
+// ATTENTION!!!!!!!!!!
+// I SWITCHED TO PERMANENT DOMAIN
 const url = 'https://course-api.com/react-tours-project';
-
 function App() {
-  const [loading, setLoading] = useState(true);
-  const [show, setShow] = useState(false);
-  const [data, setData] = useState([]);
-  const [isError, setIsError] = useState(false);
+  const [tours, setTours] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const deleteTour = (id) => {
+    const newTours = tours.filter((tour) => tour.id !== id);
+    setTours(newTours);
+  };
+
+  const getTours = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(url);
+      const tours = await response.json();
+      setIsLoading(false);
+      setTours(tours);
+    } catch (error) {
+      setIsLoading(false);
+      console.log(error);
+    }
+  };
 
   useEffect(() => {
-    fetch(url).then((response) => {
-      if (response.status === 200 && response.status <= 299) {
-        setLoading(false);
-      } else {
-        setIsError(!isError);
-        throw new Error(response.statusText);
-      }
-      return response.json();
-    }).then((responses) => setData(responses)).catch((err) => console.log(err));
+    getTours();
   }, []);
 
-  if (loading) {
-    return <h2>Loading...</h2>;
-  }
-  if (isError) {
-    return <h2>There was an error fetching data...</h2>;
+  if (isLoading) {
+    return (
+      <main>
+        <Loading />
+      </main>
+    );
   }
 
-  const handleClick = () => {
-    setShow(!show);
-  };
+  if (tours.length === 0) {
+    return (
+      <main>
+        <div className="title">
+          <h4>No existing tours</h4>
+          <button className="btn" onClick={getTours}>
+            Refresh
+          </button>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main>
-      <section>
-        {data.length > 0 ? <h1>Our Tours</h1> : <h1>No Tours</h1>}
-        <Tours infos={data} handleClick={handleClick} show={show} />
-      </section>
+      <Tours tours={tours} deleteTour={deleteTour} />
     </main>
   );
 }
